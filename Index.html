@@ -1,0 +1,684 @@
+<!DOCTYPE html><html lang="ru"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Вырасти мем 2021 — ONLINE</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{overflow:hidden;font-family:Arial;background:#000;width:100%;height:100%}
+canvas{display:block;position:fixed;top:0;left:0}
+#hud{position:fixed;top:8px;left:8px;color:#fff;font-size:12px;z-index:10;background:rgba(60,20,90,.7);padding:6px 10px;border-radius:10px;border:1px solid #b96bff}
+#hud b{color:#FFD700}
+#badge{position:fixed;top:8px;right:8px;color:#fff;font-size:12px;z-index:10;background:rgba(60,20,90,.7);padding:4px 10px 4px 4px;border-radius:30px;border:1px solid #b96bff;font-weight:bold;display:flex;align-items:center;gap:8px;cursor:pointer;max-width:180px}
+#uav{width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.4);border:2px solid #b96bff;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+#uname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#toast{position:fixed;top:30%;left:50%;transform:translate(-50%,-50%) scale(0);color:#FFD700;font-size:18px;font-weight:bold;text-shadow:2px 2px 5px #000;z-index:150;background:rgba(60,20,90,.95);padding:12px 22px;border-radius:14px;border:2px solid #FFD700;transition:transform .4s cubic-bezier(.68,-.55,.27,1.55);pointer-events:none;white-space:nowrap;text-align:center;max-width:90%}
+#toast.show{transform:translate(-50%,-50%) scale(1)}
+#act{position:fixed;bottom:40px;right:30px;width:90px;height:90px;border-radius:50%;background:rgba(185,107,255,.85);border:3px solid #b96bff;font-size:36px;display:flex;align-items:center;justify-content:center;z-index:100;color:#fff;cursor:pointer}
+#act:active{transform:scale(.9)}
+#joy{display:none}
+body.mobile #joy{display:block;position:fixed;bottom:40px;left:30px;width:140px;height:140px;border-radius:50%;background:rgba(185,107,255,.15);border:3px solid rgba(185,107,255,.5);z-index:100;touch-action:none}
+body.mobile #knob{display:block;position:absolute;top:50%;left:50%;width:60px;height:60px;border-radius:50%;background:rgba(185,107,255,.9);border:3px solid #b96bff;transform:translate(-50%,-50%);pointer-events:none}
+body.mobile #look{display:block;position:fixed;top:0;right:0;width:60%;height:65%;z-index:99;touch-action:none}
+#auth{position:fixed;inset:0;background:linear-gradient(180deg,#1a0a2e,#0a0518);z-index:600;display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff;font-family:Arial;overflow-y:auto;padding:20px}
+#auth h1{font-size:30px;text-shadow:0 0 30px #b96bff;margin-bottom:20px;text-align:center}
+#acard{background:rgba(60,20,90,.85);border:3px solid #b96bff;border-radius:20px;padding:22px;width:340px;max-width:92%}
+#avp{width:100px;height:100px;border-radius:50%;background:rgba(0,0,0,.4);border:3px solid #b96bff;display:flex;align-items:center;justify-content:center;font-size:40px;color:#b96bff;cursor:pointer;background-size:cover;background-position:center;margin:0 auto 8px}
+#acard .hint{text-align:center;color:#c8a8ff;font-size:11px;margin-bottom:14px}
+#acard .title{color:#FFD700;text-align:center;font-size:22px;font-weight:bold;margin-bottom:14px}
+#acard input{width:100%;padding:12px;border-radius:10px;border:2px solid #b96bff;background:rgba(0,0,0,.4);color:#fff;font-size:16px;margin-bottom:10px;outline:none;font-family:Arial}
+#acard button{width:100%;padding:14px;border-radius:12px;border:0;font-size:16px;font-weight:bold;cursor:pointer;font-family:Arial;margin-bottom:8px}
+#abtn{background:#b96bff;color:#fff;font-size:18px}
+#atog{background:transparent;color:#b96bff;border:2px solid #b96bff!important;font-size:14px;padding:10px}
+#amsg{color:#ff4444;text-align:center;margin-top:8px;font-size:13px;min-height:18px}
+</style></head><body>
+
+<div id="hud">💰 <b id="c">50</b> · 📈 Ур. <b id="lvl">1</b> · 🌐 <b id="online">0</b> онлайн</div>
+<div id="badge"><div id="uav">👤</div><span id="uname">Гость</span></div>
+<div id="toast"></div>
+<div id="act">✋</div>
+<div id="look"></div>
+<div id="joy"><div id="knob"></div></div>
+
+<div id="auth">
+  <h1>❄️ ВЫРАСТИ МЕМ 2021 ❄️</h1>
+  <div id="acard">
+    <div id="avp">📷<input type="file" id="avInput" accept="image/*" style="display:none"></div>
+    <div class="hint">Нажми на круг, чтобы выбрать фото</div>
+    <div class="title" id="atitle">Вход</div>
+    <input id="aname" placeholder="Имя" autocomplete="off">
+    <input id="apass" type="password" placeholder="Пароль" autocomplete="off">
+    <button id="abtn">▶ ИГРАТЬ</button>
+    <button id="atog">Нет аккаунта? Регистрация</button>
+    <div id="amsg"></div>
+  </div>
+</div>
+
+<script type="importmap">{"imports":{
+"three":"https://unpkg.com/three@0.160.0/build/three.module.js",
+"firebase/app":"https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js",
+"firebase/database":"https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js",
+"firebase/auth":"https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"
+}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { initializeApp } from 'firebase/app';
+import { getDatabase, ref, set, onValue, remove, onDisconnect, serverTimestamp } from 'firebase/database';
+import { getAuth, signInAnonymously } from 'firebase/auth';
+
+const M = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || matchMedia('(pointer:coarse)').matches;
+if (M) document.body.classList.add('mobile');
+
+const firebaseConfig = {
+  apiKey: "AIzaSyASj-HG6nwLNTCReQStFIxi6HrKb7GJaKo",
+  authDomain: "growmeme2021.firebaseapp.com",
+  databaseURL: "https://growmeme2021-default-rtdb.firebaseio.com",
+  projectId: "growmeme2021",
+  storageBucket: "growmeme2021.firebasestorage.app",
+  messagingSenderId: "1031111399976",
+  appId: "1:1031111399976:web:db7e03f1e187fedc99f31d"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getDatabase(fbApp);
+const auth = getAuth(fbApp);
+
+const AC = new (window.AudioContext || window.webkitAudioContext)();
+function beep(f,d,t='sine',v=.1){
+  try{
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.type=t;o.frequency.value=f;
+    g.gain.setValueAtTime(v,AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);
+    o.connect(g);g.connect(AC.destination);
+    o.start();o.stop(AC.currentTime+d);
+  }catch(e){}
+}
+
+function toast(text,color='#FFD700'){
+  const t=document.getElementById('toast');
+  t.textContent=text;t.style.color=color;t.style.borderColor=color;
+  t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid=setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x2a1a3e);
+scene.fog = new THREE.Fog(0x2a1a3e, 25, 90);
+const cam = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, .1, 500);
+cam.rotation.order = 'YXZ';
+const ren = new THREE.WebGLRenderer({antialias: !M});
+ren.setSize(innerWidth, innerHeight);
+ren.setPixelRatio(Math.min(devicePixelRatio, M ? 1.5 : 2));
+document.body.appendChild(ren.domElement);
+
+scene.add(new THREE.HemisphereLight(0xc8a8ff, 0x4a2a7a, 1.2));
+scene.add(new THREE.AmbientLight(0x8a5ac8, .8));
+const sun = new THREE.DirectionalLight(0xb96bff, 1.5);
+sun.position.set(30, 50, 20);
+scene.add(sun);
+
+const sG = new THREE.BufferGeometry();
+const sP = new Float32Array(300 * 3);
+for (let i = 0; i < 300; i++) {
+  sP[i*3] = (Math.random() - .5) * 200;
+  sP[i*3+1] = 30 + Math.random() * 40;
+  sP[i*3+2] = (Math.random() - .5) * 200;
+}
+sG.setAttribute('position', new THREE.BufferAttribute(sP, 3));
+scene.add(new THREE.Points(sG, new THREE.PointsMaterial({ color: 0xffffff, size: .4 })));
+
+const P = {
+  pos: new THREE.Vector3(0, 1.7, 15),
+  yaw: 0, pitch: 0,
+  coins: 50, level: 1,
+  speed: 6, runSpd: 10
+};
+
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(200, 200),
+  new THREE.MeshStandardMaterial({ color: 0xe8e0ff, roughness: .9 })
+);
+ground.rotation.x = -Math.PI / 2;
+scene.add(ground);
+
+const tree = new THREE.Group();
+const trunk = new THREE.Mesh(
+  new THREE.CylinderGeometry(.4, .5, 1.5, 8),
+  new THREE.MeshStandardMaterial({ color: 0x5a3a1a })
+);
+trunk.position.y = .75;
+tree.add(trunk);
+
+for (let i = 0; i < 3; i++) {
+  const c = new THREE.Mesh(
+    new THREE.ConeGeometry(2.5 - i * .6, 2.5, 10),
+    new THREE.MeshStandardMaterial({ color: 0x2a5a2a })
+  );
+  c.position.y = 2 + i * 1.5;
+  tree.add(c);
+  const s = new THREE.Mesh(
+    new THREE.ConeGeometry(2.55 - i * .6, .3, 10),
+    new THREE.MeshStandardMaterial({ color: 0xffffff })
+  );
+  s.position.y = 3.3 + i * 1.5;
+  tree.add(s);
+}
+
+const starTop = new THREE.Mesh(
+  new THREE.OctahedronGeometry(.5),
+  new THREE.MeshStandardMaterial({ color: 0xffdd44, emissive: 0xffaa00, emissiveIntensity: 1 })
+);
+starTop.position.y = 6.5;
+tree.add(starTop);
+const starLight = new THREE.PointLight(0xffdd44, 2, 15);
+starLight.position.y = 6.5;
+tree.add(starLight);
+
+const garlandLights = [];
+for (let i = 0; i < 30; i++) {
+  const light = new THREE.Mesh(
+    new THREE.SphereGeometry(.1, 6, 6),
+    new THREE.MeshBasicMaterial({ color: 0xff3333 })
+  );
+  const t = i / 30;
+  light.position.set(
+    Math.cos(t * Math.PI * 6) * (2 - t * 1.5),
+    1.5 + t * 4.5,
+    Math.sin(t * Math.PI * 6) * (2 - t * 1.5)
+  );
+  tree.add(light);
+  garlandLights.push(light);
+}
+tree.position.set(0, 0, 0);
+scene.add(tree);
+
+const SNOW = M ? 300 : 600;
+const snG = new THREE.BufferGeometry();
+const snP = new Float32Array(SNOW * 3);
+const snV = new Float32Array(SNOW * 3);
+for (let i = 0; i < SNOW; i++) {
+  snP[i*3]   = (Math.random() - .5) * 80;
+  snP[i*3+1] = Math.random() * 40;
+  snP[i*3+2] = (Math.random() - .5) * 80;
+  snV[i*3]   = (Math.random() - .5) * .5;
+  snV[i*3+1] = -.5 - Math.random() * 1.5;
+  snV[i*3+2] = (Math.random() - .5) * .5;
+}
+snG.setAttribute('position', new THREE.BufferAttribute(snP, 3));
+scene.add(new THREE.Points(snG, new THREE.PointsMaterial({
+  color: 0xffffff, size: .25, transparent: true, opacity: .9
+})));
+
+function updateHUD() {
+  document.getElementById('c').textContent = P.coins;
+  document.getElementById('lvl').textContent = P.level;
+}
+
+// ЧАСТЬ 2 БУДЕТ ЗДЕСЬ
+// ===== АККАУНТЫ =====
+let currentUser = localStorage.getItem('meme_user') || '';
+let pendingAvatar = '';
+let myAvatar = '';
+let fbUser = null;
+
+const avp = document.getElementById('avp');
+const avInput = document.getElementById('avInput');
+const atitle = document.getElementById('atitle');
+const abtn = document.getElementById('abtn');
+const atog = document.getElementById('atog');
+const amsg = document.getElementById('amsg');
+let isReg = false;
+
+avp.onclick = () => avInput.click();
+avInput.onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file || !file.type.startsWith('image/')) return;
+  const r = new FileReader();
+  r.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      const size = 128;
+      const cv = document.createElement('canvas');
+      cv.width = size; cv.height = size;
+      const cx = cv.getContext('2d');
+      const min = Math.min(img.width, img.height);
+      cx.drawImage(img, (img.width-min)/2, (img.height-min)/2, min, min, 0, 0, size, size);
+      pendingAvatar = cv.toDataURL('image/jpeg', 0.7);
+      avp.style.backgroundImage = `url(${pendingAvatar})`;
+      avp.textContent = '';
+      amsg.style.color = '#44ff44';
+      amsg.textContent = '✅ Фото выбрано!';
+      setTimeout(() => { if (amsg.textContent === '✅ Фото выбрано!') amsg.textContent = ''; }, 1500);
+    };
+    img.src = ev.target.result;
+  };
+  r.readAsDataURL(file);
+};
+
+atog.onclick = () => {
+  isReg = !isReg;
+  atitle.textContent = isReg ? 'Регистрация' : 'Вход';
+  abtn.textContent = isReg ? '✨ Создать' : '▶ Играть';
+  atog.textContent = isReg ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Регистрация';
+  amsg.textContent = '';
+};
+
+abtn.onclick = async () => {
+  const name = document.getElementById('aname').value.trim();
+  const pass = document.getElementById('apass').value;
+  if (!name || !pass) { amsg.style.color = '#ff4444'; amsg.textContent = '⚠️ Заполни всё!'; return; }
+  if (name.length < 2) { amsg.style.color = '#ff4444'; amsg.textContent = '⚠️ Имя от 2 символов'; return; }
+  if (pass.length < 3) { amsg.style.color = '#ff4444'; amsg.textContent = '⚠️ Пароль от 3 символов'; return; }
+  const users = JSON.parse(localStorage.getItem('meme_users') || '{}');
+  const hash = btoa(name + ':' + pass);
+  if (isReg) {
+    if (users[name]) { amsg.style.color = '#ff4444'; amsg.textContent = '⚠️ Имя занято'; return; }
+    if (!pendingAvatar) { amsg.style.color = '#ff4444'; amsg.textContent = '⚠️ Выбери фото!'; setTimeout(() => avInput.click(), 400); return; }
+    users[name] = { hash, avatar: pendingAvatar };
+    localStorage.setItem('meme_users', JSON.stringify(users));
+    amsg.style.color = '#44ff44';
+    amsg.textContent = '✅ Аккаунт создан!';
+    setTimeout(() => doLogin(name, pendingAvatar), 700);
+  } else {
+    if (!users[name]) { amsg.style.color = '#ff4444'; amsg.textContent = '⚠️ Нет такого игрока'; return; }
+    if (users[name].hash !== hash) { amsg.style.color = '#ff4444'; amsg.textContent = '⚠️ Неверный пароль'; return; }
+    doLogin(name, users[name].avatar);
+  }
+};
+
+async function doLogin(name, avatar) {
+  currentUser = name;
+  myAvatar = avatar || '';
+  localStorage.setItem('meme_user', name);
+  try {
+    const cred = await signInAnonymously(auth);
+    fbUser = cred.user;
+  } catch (e) {
+    console.error('Firebase auth error', e);
+    toast('⚠️ Ошибка онлайна', '#ff4444');
+  }
+  loadSave();
+  const a = document.getElementById('auth');
+  if (a) a.remove();
+  refreshBadge();
+  toast('👋 Привет, ' + name + '!', '#FFD700');
+  startNetwork();
+}
+
+const badge = document.getElementById('badge');
+badge.onclick = () => {
+  if (!currentUser) return;
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const r = new FileReader();
+    r.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const size = 128;
+        const cv = document.createElement('canvas');
+        cv.width = size; cv.height = size;
+        const cx = cv.getContext('2d');
+        const min = Math.min(img.width, img.height);
+        cx.drawImage(img, (img.width-min)/2, (img.height-min)/2, min, min, 0, 0, size, size);
+        const data = cv.toDataURL('image/jpeg', 0.7);
+        myAvatar = data;
+        const users = JSON.parse(localStorage.getItem('meme_users') || '{}');
+        if (users[currentUser]) {
+          users[currentUser].avatar = data;
+          localStorage.setItem('meme_users', JSON.stringify(users));
+        }
+        refreshBadge();
+        toast('📸 Аватар обновлён!', '#44ff44');
+        beep(1000, .15, 'triangle', .15);
+      };
+      img.src = ev.target.result;
+    };
+    r.readAsDataURL(file);
+  };
+  inp.click();
+};
+
+function refreshBadge() {
+  const av = document.getElementById('uav');
+  const nm = document.getElementById('uname');
+  nm.textContent = currentUser || 'Гость';
+  if (myAvatar) {
+    av.style.backgroundImage = `url(${myAvatar})`;
+    av.textContent = '';
+  } else {
+    av.style.backgroundImage = '';
+    av.textContent = '👤';
+  }
+}
+
+function saveGame() {
+  if (!currentUser) return;
+  localStorage.setItem('meme_save_' + currentUser, JSON.stringify({
+    coins: P.coins, level: P.level
+  }));
+}
+function loadSave() {
+  const raw = localStorage.getItem('meme_save_' + currentUser);
+  if (!raw) return;
+  try {
+    const d = JSON.parse(raw);
+    P.coins = d.coins ?? 50;
+    P.level = d.level ?? 1;
+    updateHUD();
+  } catch(e) {}
+}
+setInterval(saveGame, 10000);
+addEventListener('beforeunload', saveGame);
+
+if (currentUser && localStorage.getItem('meme_users')) {
+  const users = JSON.parse(localStorage.getItem('meme_users') || '{}');
+  if (users[currentUser]) {
+    setTimeout(() => doLogin(currentUser, users[currentUser].avatar), 200);
+  }
+}
+
+// ===== СЕТЬ (ОНЛАЙН) =====
+let myId = null;
+const otherPlayers = {};
+
+function makeAvatarMesh(name, avatarUrl) {
+  const group = new THREE.Group();
+  const body = new THREE.Mesh(
+    new THREE.CylinderGeometry(.35, .4, 1.2, 12),
+    new THREE.MeshStandardMaterial({ color: 0xb96bff, emissive: 0x5a1a8a, emissiveIntensity: .4 })
+  );
+  body.position.y = .6;
+  group.add(body);
+
+  const headMat = new THREE.MeshStandardMaterial({
+    color: avatarUrl ? 0xffffff : 0xffdbac,
+    map: avatarUrl ? new THREE.TextureLoader().load(avatarUrl) : null
+  });
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.4, 16, 16), headMat);
+  head.position.y = 1.55;
+  group.add(head);
+
+  if (name) {
+    const cv = document.createElement('canvas');
+    cv.width = 256; cv.height = 64;
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = 'rgba(60,20,90,.9)';
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(0,0,256,64,16); ctx.fill(); }
+    else { ctx.fillRect(0,0,256,64); }
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 28px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(name, 128, 32, 240);
+    const nameTex = new THREE.CanvasTexture(cv);
+    const spriteMat = new THREE.SpriteMaterial({ map: nameTex, depthTest: false });
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.scale.set(1.6, .4, 1);
+    sprite.position.y = 2.3;
+    group.add(sprite);
+  }
+  return group;
+}
+
+function startNetwork() {
+  if (!fbUser) { setTimeout(startNetwork, 500); return; }
+  myId = fbUser.uid;
+  const myRef = ref(db, 'players/' + myId);
+  const playersRef = ref(db, 'players');
+
+  setInterval(() => {
+    set(myRef, {
+      name: currentUser,
+      avatar: myAvatar,
+      x: P.pos.x,
+      z: P.pos.z,
+      yaw: P.yaw,
+      t: serverTimestamp()
+    }).catch(() => {});
+  }, 100);
+
+  onDisconnect(myRef).remove();
+
+  onValue(playersRef, (snap) => {
+    const data = snap.val() || {};
+    const ids = Object.keys(data);
+    let count = 0;
+    ids.forEach(id => {
+      if (id === myId) return;
+      const p = data[id];
+      if (!p || !p.t) return;
+      count++;
+      if (!otherPlayers[id]) {
+        const mesh = makeAvatarMesh(p.name || 'Игрок', p.avatar || '');
+        mesh.position.set(p.x, 0, p.z);
+        scene.add(mesh);
+        otherPlayers[id] = { mesh, lastSeen: Date.now(), lastAvatar: p.avatar };
+      } else {
+        const op = otherPlayers[id];
+        op.mesh.position.lerp(new THREE.Vector3(p.x, 0, p.z), .35);
+        op.mesh.rotation.y = -p.yaw;
+        op.lastSeen = Date.now();
+        if (p.avatar !== op.lastAvatar) {
+          op.lastAvatar = p.avatar;
+          const head = op.mesh.children[1];
+          if (head && p.avatar) {
+            new THREE.TextureLoader().load(p.avatar, tex => {
+              head.material.map = tex;
+              head.material.color.setHex(0xffffff);
+              head.material.needsUpdate = true;
+            });
+          }
+        }
+      }
+    });
+    document.getElementById('online').textContent = count + 1;
+  });
+
+  setInterval(() => {
+    const now = Date.now();
+    Object.keys(otherPlayers).forEach(id => {
+      if (now - otherPlayers[id].lastSeen > 5000) {
+        scene.remove(otherPlayers[id].mesh);
+        delete otherPlayers[id];
+      }
+    });
+  }, 2000);
+}
+
+// ===== УПРАВЛЕНИЕ =====
+const keys = {};
+addEventListener('keydown', e => { keys[e.code] = 1; });
+addEventListener('keyup', e => { keys[e.code] = 0; });
+
+let locked = false;
+if (!M) {
+  ren.domElement.addEventListener('click', () => {
+    if (!locked) ren.domElement.requestPointerLock();
+  });
+  document.addEventListener('pointerlockchange', () => {
+    locked = document.pointerLockElement === ren.domElement;
+  });
+  document.addEventListener('mousemove', e => {
+    if (!locked) return;
+    P.yaw -= e.movementX * .002;
+    P.pitch = Math.max(-1.4, Math.min(1.4, P.pitch - e.movementY * .002));
+  });
+}
+
+const jE = document.getElementById('joy');
+const kn = document.getElementById('knob');
+let jX = 0, jY = 0, jId = null;
+const jC = { x: 0, y: 0 }, JM = 50;
+
+const jUpd = (cx, cy) => {
+  let dx = cx - jC.x, dy = cy - jC.y, l = Math.hypot(dx, dy);
+  if (l > JM) { dx = dx / l * JM; dy = dy / l * JM; }
+  kn.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+  jX = dx / JM;
+  jY = dy / JM;
+};
+const jStop = () => {
+  jId = null; jX = 0; jY = 0;
+  kn.style.transform = 'translate(-50%,-50%)';
+};
+
+if (M) {
+  jE.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    const r = jE.getBoundingClientRect();
+    jId = t.identifier;
+    jC.x = r.left + r.width / 2;
+    jC.y = r.top + r.height / 2;
+    jUpd(t.clientX, t.clientY);
+  }, { passive: false });
+  jE.addEventListener('touchmove', e => {
+    e.preventDefault();
+    for (const t of e.changedTouches) if (t.identifier === jId) jUpd(t.clientX, t.clientY);
+  }, { passive: false });
+  jE.addEventListener('touchend', e => { e.preventDefault(); jStop(); }, { passive: false });
+  jE.addEventListener('touchcancel', e => { e.preventDefault(); jStop(); }, { passive: false });
+
+  const lE = document.getElementById('look');
+  let lId = null, llx = 0, lly = 0;
+  lE.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    lId = t.identifier;
+    llx = t.clientX;
+    lly = t.clientY;
+  }, { passive: false });
+  lE.addEventListener('touchmove', e => {
+    e.preventDefault();
+    for (const t of e.changedTouches) if (t.identifier === lId) {
+      const dx = t.clientX - llx, dy = t.clientY - lly;
+      llx = t.clientX; lly = t.clientY;
+      P.yaw -= dx * .006;
+      P.pitch = Math.max(-1.4, Math.min(1.4, P.pitch - dy * .006));
+    }
+  }, { passive: false });
+  lE.addEventListener('touchend', e => { e.preventDefault(); lId = null; }, { passive: false });
+}
+
+document.getElementById('act').addEventListener('click', () => {
+  P.coins += 5;
+  updateHUD();
+  toast('+5 💰', '#FFD700');
+  beep(800, .1);
+  saveGame();
+});
+
+// ===== ИГРОВОЙ ЦИКЛ =====
+let last = performance.now();
+
+function loop() {
+  requestAnimationFrame(loop);
+  const now = performance.now();
+  const dt = Math.min((now - last) / 1000, .1);
+  last = now;
+
+  const fwd = new THREE.Vector3(-Math.sin(P.yaw), 0, -Math.cos(P.yaw));
+  const rgt = new THREE.Vector3(Math.cos(P.yaw), 0, -Math.sin(P.yaw));
+  const mv = new THREE.Vector3();
+
+  if (M) {
+    mv.addScaledVector(fwd, -jY);
+    mv.addScaledVector(rgt, jX);
+  } else {
+    if (keys.KeyW) mv.add(fwd);
+    if (keys.KeyS) mv.sub(fwd);
+    if (keys.KeyD) mv.add(rgt);
+    if (keys.KeyA) mv.sub(rgt);
+  }
+
+  if (mv.length() > 1) mv.normalize();
+  const sp = (keys.ShiftLeft || keys.ShiftRight) ? P.runSpd : P.speed;
+  P.pos.x = Math.max(-90, Math.min(90, P.pos.x + mv.x * sp * dt));
+  P.pos.z = Math.max(-90, Math.min(90, P.pos.z + mv.z * sp * dt));
+
+  cam.position.copy(P.pos);
+  cam.rotation.set(P.pitch, P.yaw, 0);
+
+  const arr = snG.attributes.position.array;
+  for (let i = 0; i < SNOW; i++) {
+    arr[i*3]   += snV[i*3]   * dt * 10;
+    arr[i*3+1] += snV[i*3+1] * dt * 10;
+    arr[i*3+2] += snV[i*3+2] * dt * 10;
+    if (arr[i*3+1] < 0) {
+      arr[i*3]   = P.pos.x + (Math.random() - .5) * 80;
+      arr[i*3+1] = 35 + Math.random() * 5;
+      arr[i*3+2] = P.pos.z + (Math.random() - .5) * 80;
+    }
+  }
+  snG.attributes.position.needsUpdate = true;
+
+  Object.values(otherPlayers).forEach(op => {
+    op.mesh.position.y = Math.abs(Math.sin(now * .003 + op.mesh.position.x)) * .1;
+  });
+
+  const t = now * .002;
+  const gC = [0xff3333, 0x33ff33, 0x3333ff, 0xffdd33, 0xff33dd];
+  garlandLights.forEach((light, i) => {
+    light.material.color.setHex(gC[Math.floor((t + i * .3) % 5)]);
+  });
+
+  ren.render(scene, cam);
+}
+
+addEventListener('resize', () => {
+  cam.aspect = innerWidth / innerHeight;
+  cam.updateProjectionMatrix();
+  ren.setSize(innerWidth, innerHeight);
+});
+
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+// ===== ОТЛАДКА =====
+const dbg = document.createElement('div');
+dbg.style.cssText = 'position:fixed;bottom:0;left:0;right:0;max-height:35vh;overflow-y:auto;background:rgba(0,0,0,.9);color:#0f0;font-family:monospace;font-size:11px;padding:8px;z-index:9999;border-top:2px solid #0f0;white-space:pre-wrap;line-height:1.4';
+dbg.textContent = '🔍 Отладка запущена...\n';
+document.body.appendChild(dbg);
+
+function log(msg, color = '#0f0') {
+  dbg.textContent += msg + '\n';
+  dbg.scrollTop = dbg.scrollHeight;
+}
+
+window.onerror = (msg, url, line) => {
+  log('❌ ОШИБКА: ' + msg + ' (строка ' + line + ')', '#f00');
+};
+
+window.addEventListener('unhandledrejection', e => {
+  log('❌ PROMISE: ' + (e.reason?.message || e.reason), '#f00');
+});
+
+// Проверка Firebase через 3 секунды
+setTimeout(() => {
+  log('🔑 fbUser: ' + (fbUser ? 'ЕСТЬ ' + fbUser.uid.slice(0,8) : 'НЕТ'));
+  log('🔐 auth.currentUser: ' + (auth.currentUser ? 'ЕСТЬ' : 'НЕТ'));
+  log('🌐 myId: ' + (myId || 'НЕТ'));
+  log('👤 currentUser: ' + (currentUser || 'НЕТ'));
+}, 3000);
+
+// Проверка записи в Firebase через 5 секунд
+setTimeout(async () => {
+  if (!auth.currentUser) {
+    log('⚠️ Нет авторизации в Firebase — запись невозможна!', '#ff0');
+    return;
+  }
+  try {
+    const testRef = ref(db, 'test_' + Date.now());
+    await set(testRef, { hello: 'world', ts: Date.now() });
+    log('✅ Тестовая запись в Firebase УДАЛАСЬ!', '#0f0');
+  } catch (e) {
+    log('❌ Ошибка записи: ' + e.message, '#f00');
+  }
+}, 5000);
+updateHUD();
+loop();
+</script>
+</body>
+</html>
